@@ -14,9 +14,6 @@
   "@types/nodemailer": "^8.0.2",
   "typescript": "^7.0.2"
 },
-  "peerDependencies": {
-    "typescript": "^7"
-  },
   "dependencies": {
     "hono": "^4.13.13",
     "nodemailer": "^10.1.2",
