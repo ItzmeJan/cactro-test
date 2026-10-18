@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Event Booking API Tester</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Segoe UI, Arial, sans-serif;
+      color: #182230;
+      background: #f3f6fa;
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header {
+      padding: 28px max(20px, calc((100% - 1120px) / 2));
+      color: #fff;
+      background: #172b4d;
+    }
+    header h1 { margin: 0 0 8px; font-size: 25px; }
+    header p { margin: 0; color: #d7e2f1; }
+    main { max-width: 1120px; margin: 24px auto; padding: 0 20px 48px; }
+    .panel, .endpoint {
+      border: 1px solid #dce3ed;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 2px 8px #172b4d0a;
+    }
+    .panel { padding: 18px; margin-bottom: 20px; }
+    .global-grid { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(260px, 2fr); gap: 16px; }
+    label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+    input, textarea, select, button {
+      font: inherit;
+    }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #c7d0dd;
+      border-radius: 6px;
+      padding: 9px 10px;
+      color: inherit;
+      background: #fff;
+    }
+    input:focus, textarea:focus, select:focus, button:focus-visible {
+      outline: 3px solid #8bb8ff;
+      outline-offset: 1px;
+    }
+    .hint { margin: 7px 0 0; color: #536274; font-size: 12px; line-height: 1.45; }
+    .section-title { margin: 25px 0 12px; font-size: 18px; }
+    .endpoint-list { display: grid; gap: 12px; }
+    .endpoint { overflow: hidden; }
+    .endpoint-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 15px;
+      border-bottom: 1px solid #e7ebf1;
+      background: #fbfcfe;
+    }
+    .endpoint-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+    .method {
+      min-width: 62px;
+      padding: 4px 7px;
+      border-radius: 4px;
+      color: white;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
+    }
+    .GET { background: #26734d; }
+    .POST { background: #2557a7; }
+    .PATCH { background: #9b6500; }
+    .endpoint-content { padding: 14px 15px 15px; }
+    .request-grid { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(260px, 1fr); gap: 12px; }
+    .body-editor { grid-row: span 2; }
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      tab-size: 2;
+    }
+    .body-editor textarea { min-height: 142px; }
+    .auth-line { display: flex; align-items: center; gap: 8px; min-height: 34px; }
+    .auth-line input { width: auto; }
+    .auth-line label { display: inline; margin: 0; font-weight: 500; }
+    .run-line { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 14px;
+      color: white;
+      background: #1769aa;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #0f568f; }
+    button:disabled { cursor: wait; opacity: .65; }
+    .clear-button { color: #26374a; background: #e8edf3; }
+    .clear-button:hover { background: #d8e0e9; }
+    .status { color: #536274; font-size: 13px; }
+    .response { display: none; margin: 12px 0 0; }
+    .response.visible { display: block; }
+    .response-meta { margin-bottom: 5px; font-size: 12px; font-weight: 700; }
+    .response-meta.ok { color: #167044; }
+    .response-meta.bad { color: #b42318; }
+    .response pre {
+      overflow: auto;
+      max-height: 320px;
+      margin: 0;
+      padding: 11px;
+      border-radius: 6px;
+      color: #e5edf7;
+      background: #17212f;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font: 12px/1.5 Consolas, monospace;
+    }
+    .note {
+      margin: 0 0 16px;
+      padding: 11px 13px;
+      border-left: 3px solid #d18b00;
+      color: #51401e;
+      background: #fff8e8;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    @media (max-width: 680px) {
+      .global-grid, .request-grid { grid-template-columns: 1fr; }
+      .body-editor { grid-row: auto; }
+      header { padding: 22px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Event Booking API Tester</h1>
+    <p>Send requests to every endpoint documented for the Event Booking System.</p>
+  </header>
+  <main>
+    <section class="panel" aria-label="Request settings">
+      <div class="global-grid">
+        <div>
+          <label for="base-url">Server base URL</label>
+          <input id="base-url" type="url" value="http://localhost:3000" spellcheck="false">
+          <p class="hint">The URL must include the protocol, such as http://localhost:3000.</p>
+        </div>
+        <div>
+          <label for="access-token">Bearer access token</label>
+          <input id="access-token" type="password" placeholder="Paste a token or sign in below" autocomplete="off" spellcheck="false">
+          <p class="hint">Successful login/refresh requests fill this field automatically. Authenticated request cards use this token when checked.</p>
+        </div>
+      </div>
+      <div class="run-line">
+        <button type="button" class="clear-button" id="clear-responses">Clear all responses</button>
+        <span class="hint">Token stays in this page only and is not saved to browser storage.</span>
+      </div>
+    </section>
+    <p class="note"><strong>Local-file/CORS note:</strong> If the browser blocks a request when this file is opened directly, configure the API's CORS allowed origin for this page or serve this HTML from an allowed local origin. Do not disable browser security.</p>
+    <div id="endpoint-groups"></div>
+  </main>
+  <script>
+    "use strict";
+
+    const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const endpoints = [
+      {
+        group: "Authentication",
+        items: [
+          { title: "Register account", method: "POST", path: "/auth/register", body: { email: "replace-me@example.test", password: "TestPass123!", name: "Test User", role: "customer" } },
+          { title: "Login", method: "POST", path: "/auth/login", body: { email: "replace-me@example.test", password: "TestPass123!" } },
+          { title: "Refresh access token", method: "POST", path: "/auth/refresh", body: { refreshToken: "paste-refresh-token" } },
+          { title: "Logout", method: "POST", path: "/auth/logout", auth: true, body: { refreshToken: "paste-refresh-token" } }
+        ]
+      },
+      {
+        group: "Events",
+        items: [
+          { title: "List active events", method: "GET", path: "/events?page=1&limit=20" },
+          { title: "Get event by ID", method: "GET", path: "/events/1" },
+          { title: "Create event (organizer)", method: "POST", path: "/events", auth: true, body: { title: "My test event", description: "Created using the API tester", location: "Local test", startsAt: futureDate, capacity: 10 } },
+          { title: "Update event (organizer)", method: "PATCH", path: "/events/1", auth: true, body: { title: "Updated test event" } },
+          { title: "Start booking (customer)", method: "POST", path: "/events/1/bookings", auth: true, body: { quantity: 1 } }
+        ]
+      },
+      {
+        group: "Bookings",
+        items: [
+          { title: "Confirm booking with OTP (customer)", method: "POST", path: "/bookings/1/confirm", auth: true, body: { otp: "000000" } },
+          { title: "List my bookings (customer)", method: "GET", path: "/bookings/my?page=1&limit=20", auth: true }
+        ]
+      },
+      {
+        group: "Organizer",
+        items: [
+          { title: "List my events (organizer)", method: "GET", path: "/organizer/events?page=1&limit=20", auth: true },
+          { title: "List event attendees (organizer)", method: "GET", path: "/organizer/events/1/bookings?page=1&limit=20", auth: true }
+        ]
+      }
+    ];
+
+    const groupsRoot = document.getElementById("endpoint-groups");
+    const tokenInput = document.getElementById("access-token");
+
+    function makeField(labelText, input, className) {
+      const wrapper = document.createElement("div");
+      if (className) wrapper.className = className;
+      const label = document.createElement("label");
+      label.textContent = labelText;
+      wrapper.append(label, input);
+      return wrapper;
+    }
+
+    function addEndpoint(groupName, endpoint, index) {
+      const card = document.createElement("article");
+      card.className = "endpoint";
+      const heading = document.createElement("div");
+      heading.className = "endpoint-head";
+      const method = document.createElement("span");
+      method.className = `method ${endpoint.method}`;
+      method.textContent = endpoint.method;
+      const title = document.createElement("h3");
+      title.textContent = endpoint.title;
+      heading.append(method, title);
+
+      const content = document.createElement("div");
+      content.className = "endpoint-content";
+      const grid = document.createElement("div");
+      grid.className = "request-grid";
+
+      const path = document.createElement("input");
+      path.type = "text";
+      path.value = endpoint.path;
+      path.spellcheck = false;
+      path.setAttribute("aria-label", `${endpoint.title} path and query`);
+      grid.append(makeField("Path and query string", path));
+
+      const body = document.createElement("textarea");
+      body.spellcheck = false;
+      body.setAttribute("aria-label", `${endpoint.title} JSON body`);
+      body.value = endpoint.body ? JSON.stringify(endpoint.body, null, 2) : "";
+      const bodyWrapper = makeField("JSON request body (optional)", body, "body-editor");
+      grid.append(bodyWrapper);
+
+      const authLine = document.createElement("div");
+      authLine.className = "auth-line";
+      const auth = document.createElement("input");
+      auth.type = "checkbox";
+      auth.id = `auth-${index}`;
+      auth.checked = Boolean(endpoint.auth);
+      const authLabel = document.createElement("label");
+      authLabel.htmlFor = auth.id;
+      authLabel.textContent = "Send Authorization: Bearer token";
+      authLine.append(auth, authLabel);
+      grid.append(authLine);
+
+      const runLine = document.createElement("div");
+      runLine.className = "run-line";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Send request";
+      const status = document.createElement("span");
+      status.className = "status";
+      runLine.append(button, status);
+
+      const response = document.createElement("div");
+      response.className = "response";
+      const responseMeta = document.createElement("div");
+      responseMeta.className = "response-meta";
+      const responseBody = document.createElement("pre");
+      response.append(responseMeta, responseBody);
+
+      button.addEventListener("click", async () => {
+        let url;
+        let requestBody;
+        const base = document.getElementById("base-url").value.trim().replace(/\/+$/, "");
+        let requestPath = path.value.trim();
+        if (!base) {
+          status.textContent = "Enter a server base URL.";
+          return;
+        }
+        if (!requestPath.startsWith("/")) requestPath = `/${requestPath}`;
+        try {
+          url = new URL(`${base}${requestPath}`);
+        } catch {
+          status.textContent = "Invalid server URL or endpoint path.";
+          return;
+        }
+        const options = { method: endpoint.method, headers: { Accept: "application/json" } };
+        if (auth.checked) {
+          const token = tokenInput.value.trim();
+          if (!token) {
+            status.textContent = "Add an access token or uncheck authentication.";
+            return;
+          }
+          options.headers.Authorization = `Bearer ${token}`;
+        }
+        if (body.value.trim()) {
+          try {
+            requestBody = JSON.parse(body.value);
+          } catch (error) {
+            status.textContent = `Invalid JSON body: ${error.message}`;
+            return;
+          }
+          options.headers["Content-Type"] = "application/json";
+          options.body = JSON.stringify(requestBody);
+        }
+
+        button.disabled = true;
+        status.textContent = `Sending ${endpoint.method} ${url.pathname}${url.search}…`;
+        response.classList.remove("visible");
+        const startedAt = performance.now();
+        try {
+          const result = await fetch(url, options);
+          const raw = await result.text();
+          let parsed;
+          try { parsed = raw ? JSON.parse(raw) : ""; } catch { parsed = raw; }
+          const pretty = typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2);
+          responseMeta.textContent = `${result.status} ${result.statusText} · ${Math.round(performance.now() - startedAt)} ms`;
+          responseMeta.className = `response-meta ${result.ok ? "ok" : "bad"}`;
+          responseBody.textContent = pretty || "(empty response)";
+          response.classList.add("visible");
+          status.textContent = "Request complete.";
+
+          if (result.ok && parsed && typeof parsed === "object") {
+            if (typeof parsed.accessToken === "string") tokenInput.value = parsed.accessToken;
+            else if (parsed.data && typeof parsed.data.accessToken === "string") tokenInput.value = parsed.data.accessToken;
+          }
+          if (result.type === "opaque") status.textContent = "Response blocked by browser CORS policy.";
+        } catch (error) {
+          responseMeta.textContent = "Request failed";
+          responseMeta.className = "response-meta bad";
+          responseBody.textContent = `${error.message}\n\nThe browser could not read a response. Check that the server is running and allows this page's origin via CORS.`;
+          response.classList.add("visible");
+          status.textContent = "Network or CORS error.";
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      content.append(grid, runLine, response);
+      card.append(heading, content);
+      return card;
+    }
+
+    let endpointIndex = 0;
+    for (const group of endpoints) {
+      const section = document.createElement("section");
+      const heading = document.createElement("h2");
+      heading.className = "section-title";
+      heading.textContent = group.group;
+      const list = document.createElement("div");
+      list.className = "endpoint-list";
+      for (const endpoint of group.items) list.append(addEndpoint(group.group, endpoint, endpointIndex++));
+      section.append(heading, list);
+      groupsRoot.append(section);
+    }
+
+    document.getElementById("clear-responses").addEventListener("click", () => {
+      for (const element of document.querySelectorAll(".response")) {
+        element.classList.remove("visible");
+        element.querySelector("pre").textContent = "";
+      }
+      for (const element of document.querySelectorAll(".status")) element.textContent = "";
+    });
+  </script>
+</body>
+</html>
